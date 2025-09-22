@@ -1,8 +1,9 @@
-/* Tiny Synth Sequencer — vanilla JS + Web Audio */
+/* UI polish + Theme toggle + your original sequencer logic */
 
 const ROWS = 4;
 const COLS = 16;
-const NOTES = ["C3", "E3", "G3", "C4"]; // kick-ish, snare-ish, hat-ish, lead-ish
+const NOTES = ["C3", "E3", "G3", "C4"];
+
 const gridEl = document.getElementById("grid");
 const bpmEl = document.getElementById("bpm");
 const bpmValEl = document.getElementById("bpmVal");
@@ -13,19 +14,32 @@ const playBtn = document.getElementById("playBtn");
 const stopBtn = document.getElementById("stopBtn");
 const clearBtn = document.getElementById("clearBtn");
 const randomBtn = document.getElementById("randomBtn");
+const themeBtn = document.getElementById("themeBtn");
 
 let isMouseDown = false;
 let isPlaying = false;
 let currentStep = 0;
 let scheduleTimer;
-let lookahead = 25; // ms between scheduler runs
-let scheduleAhead = 0.1; // seconds to schedule ahead in WebAudio time
+let lookahead = 25;
+let scheduleAhead = 0.1;
 
 const state = Array.from({ length: ROWS }, () =>
   Array.from({ length: COLS }, () => false)
 );
 
-// Build grid
+// --------- Theme toggle (saved) ----------
+const root = document.documentElement;
+const savedTheme = localStorage.getItem("ts-theme");
+if (savedTheme === "light") root.classList.add("light");
+themeBtn?.addEventListener("click", () => {
+  root.classList.toggle("light");
+  localStorage.setItem(
+    "ts-theme",
+    root.classList.contains("light") ? "light" : "dark"
+  );
+});
+
+// --------- Build grid ----------
 function buildGrid() {
   gridEl.style.setProperty("--cols", COLS);
   gridEl.innerHTML = "";
@@ -43,7 +57,7 @@ function buildGrid() {
 }
 buildGrid();
 
-// Mouse/touch painting
+// Painting
 gridEl.addEventListener("mousedown", (e) => {
   if (
     !(e.target instanceof HTMLElement) ||
@@ -63,14 +77,12 @@ gridEl.addEventListener("mouseover", (e) => {
   toggleCell(e.target, true);
 });
 document.addEventListener("mouseup", () => (isMouseDown = false));
-
 gridEl.addEventListener("click", (e) => {
   if (
     !(e.target instanceof HTMLElement) ||
     !e.target.classList.contains("cell")
   )
     return;
-  // Single click toggle
   toggleCell(e.target, !e.target.classList.contains("active"));
 });
 
@@ -80,28 +92,24 @@ function toggleCell(cell, on) {
   state[r][c] = on;
   cell.classList.toggle("active", on);
   cell.setAttribute("aria-pressed", on ? "true" : "false");
-  // Tap-to-preview sound
-  if (on) {
-    playNoteOnce(NOTES[r], 0.06);
-  }
+  if (on) playNoteOnce(NOTES[r], 0.06);
 }
 
 // Controls
-bpmEl.addEventListener("input", () => {
-  bpmValEl.textContent = bpmEl.value;
-});
-swingEl.addEventListener("input", () => {
-  swingValEl.textContent = `${swingEl.value}%`;
-});
+bpmEl.addEventListener("input", () => (bpmValEl.textContent = bpmEl.value));
+swingEl.addEventListener(
+  "input",
+  () => (swingValEl.textContent = `${swingEl.value}%`)
+);
 
 playBtn.addEventListener("click", () => togglePlay(true));
 stopBtn.addEventListener("click", () => togglePlay(false));
 clearBtn.addEventListener("click", () => clearGrid());
 randomBtn.addEventListener("click", () => randomizeGrid());
 
-// Keyboard shortcuts
+// Keyboard
 document.addEventListener("keydown", (e) => {
-  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+  if (["INPUT", "SELECT", "TEXTAREA"].includes(e.target.tagName)) return;
   if (e.code === "Space") {
     e.preventDefault();
     togglePlay(!isPlaying);
@@ -112,9 +120,8 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-// Audio setup
+// Audio
 let audioCtx, masterGain;
-
 function ensureAudio() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -123,11 +130,9 @@ function ensureAudio() {
     masterGain.connect(audioCtx.destination);
   }
 }
-
 function freqFromNote(note) {
-  // Supports like "C3", "E4", etc.
-  const A4 = 440;
-  const SEMI = 69; // MIDI note number for A4
+  const A4 = 440,
+    SEMI = 69;
   const map = {
     C: 0,
     "C#": 1,
@@ -150,11 +155,10 @@ function freqFromNote(note) {
   const m = note.match(/^([A-G]#?|Bb|Db|Gb)(\d)$/);
   if (!m) return A4;
   const [, p, octStr] = m;
-  const n = map[p] + (parseInt(octStr, 10) + 1) * 12; // MIDI number
+  const n = map[p] + (parseInt(octStr, 10) + 1) * 12;
   const semisFromA4 = n - SEMI;
   return A4 * Math.pow(2, semisFromA4 / 12);
 }
-
 function playNoteOnce(note, duration = 0.08, when = 0) {
   ensureAudio();
   const t = audioCtx.currentTime + (when || 0);
@@ -164,7 +168,6 @@ function playNoteOnce(note, duration = 0.08, when = 0) {
   osc.type = waveEl.value;
   osc.frequency.value = freqFromNote(note);
 
-  // Clickless envelope
   gain.gain.setValueAtTime(0.0001, t);
   gain.gain.exponentialRampToValueAtTime(0.8, t + 0.006);
   gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
@@ -174,13 +177,9 @@ function playNoteOnce(note, duration = 0.08, when = 0) {
   osc.start(t);
   osc.stop(t + duration + 0.02);
 }
-
-// Simple drum flavors via short envelopes on lower notes
-function playStep(row, stepTime) {
-  const note = NOTES[row];
-  // Slightly different durations per row
+function playStep(row, time) {
   const dur = [0.12, 0.1, 0.06, 0.18][row];
-  playNoteOnce(note, dur, stepTime - audioCtx.currentTime);
+  playNoteOnce(NOTES[row], dur, time - audioCtx.currentTime);
 }
 
 // Transport
@@ -189,28 +188,30 @@ let stepIndex = 0;
 
 function togglePlay(shouldPlay) {
   ensureAudio();
+  const body = document.body;
   if (shouldPlay && !isPlaying) {
     isPlaying = true;
-    playBtn.textContent = "⏸ Pause";
-    // If context is suspended (user gesture), resume
+    body.classList.add("playing");
+    playBtn.innerHTML = `<span class="dot dot-play"></span> Pause`;
     audioCtx.resume();
-    stepIndex = currentStep; // continue from current
+    stepIndex = currentStep;
     nextNoteTime = audioCtx.currentTime + 0.05;
     schedulerStart();
   } else if (!shouldPlay && isPlaying) {
     isPlaying = false;
-    playBtn.textContent = "▶ Play";
+    body.classList.remove("playing");
+    playBtn.innerHTML = `<span class="dot dot-play"></span> Play`;
     schedulerStop();
     setPlayhead(-1);
   } else if (shouldPlay && isPlaying) {
-    // Toggle pause
     isPlaying = false;
-    playBtn.textContent = "▶ Play";
+    body.classList.remove("playing");
+    playBtn.innerHTML = `<span class="dot dot-play"></span> Play`;
     schedulerStop();
   } else {
-    // resume from pause
     isPlaying = true;
-    playBtn.textContent = "⏸ Pause";
+    body.classList.add("playing");
+    playBtn.innerHTML = `<span class="dot dot-play"></span> Pause`;
     audioCtx.resume();
     nextNoteTime = audioCtx.currentTime + 0.05;
     schedulerStart();
@@ -225,42 +226,24 @@ function schedulerStart() {
     }
   }, lookahead);
 }
-
 function schedulerStop() {
   clearInterval(scheduleTimer);
 }
 
 function scheduleStep(step, time) {
-  // Visual playhead
   setPlayhead(step);
-
-  // Play active cells in this column
-  for (let r = 0; r < ROWS; r++) {
-    if (state[r][step]) {
-      playStep(r, time);
-    }
-  }
+  for (let r = 0; r < ROWS; r++) if (state[r][step]) playStep(r, time);
 }
-
 function advanceStep() {
   const bpm = parseInt(bpmEl.value, 10);
   const secPerBeat = 60.0 / bpm;
-  // 16 steps represent 4 beats => each step is a 16th note
-  let stepDur = secPerBeat / 4;
-
-  // Basic swing on even steps (push/pull)
+  let stepDur = secPerBeat / 4; // 16th
   const swingPct = parseInt(swingEl.value, 10) / 100;
-  if (stepIndex % 2 === 1) {
-    stepDur *= 1 + 0.5 * swingPct;
-  } else {
-    stepDur *= 1 - 0.5 * swingPct;
-  }
-
+  stepDur *= stepIndex % 2 === 1 ? 1 + 0.5 * swingPct : 1 - 0.5 * swingPct;
   nextNoteTime += stepDur;
   stepIndex = (stepIndex + 1) % COLS;
   currentStep = stepIndex;
 }
-
 function setPlayhead(step) {
   document
     .querySelectorAll(".cell")
@@ -268,47 +251,36 @@ function setPlayhead(step) {
   if (step < 0) return;
   for (let r = 0; r < ROWS; r++) {
     const idx = r * COLS + step;
-    const cell = gridEl.children[idx];
-    cell.classList.add("playhead");
+    gridEl.children[idx].classList.add("playhead");
   }
 }
 
+// State helpers
 function clearGrid() {
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      state[r][c] = false;
-    }
-  }
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++) state[r][c] = false;
   document
     .querySelectorAll(".cell")
     .forEach((el) => el.classList.remove("active"));
 }
-
 function randomizeGrid() {
-  // bias per row to make it musical-ish
   const probs = [0.35, 0.25, 0.45, 0.2];
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      const on = Math.random() < probs[r];
-      state[r][c] = on;
-    }
-  }
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++) state[r][c] = Math.random() < probs[r];
   renderState();
 }
-
 function renderState() {
-  for (let r = 0; r < ROWS; r++) {
+  for (let r = 0; r < ROWS; r++)
     for (let c = 0; c < COLS; c++) {
       const idx = r * COLS + c;
       const cell = gridEl.children[idx];
       cell.classList.toggle("active", state[r][c]);
       cell.setAttribute("aria-pressed", state[r][c] ? "true" : "false");
     }
-  }
 }
 
-// Seed a pleasant default groove
-(function seedPattern() {
+// Seed starter groove
+(function seed() {
   const kick = 0,
     snare = 1,
     hat = 2,
@@ -320,11 +292,3 @@ function renderState() {
   [2, 7, 10, 15].forEach((c) => (state[lead][c] = Math.random() > 0.4));
   renderState();
 })();
-
-// Nice little accessibility touch: announce BPM and Swing changes
-bpmEl.addEventListener("change", () => {
-  bpmValEl.textContent = bpmEl.value;
-});
-swingEl.addEventListener("change", () => {
-  swingValEl.textContent = `${swingEl.value}%`;
-});
