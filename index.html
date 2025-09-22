@@ -1,91 +1,103 @@
-<!doctype html>
+<!-- TEST -->
+<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tiny Synth Sequencer</title>
-  <link rel="stylesheet" href="styles.css" />
-  <script defer src="script.js"></script>
-</head>
-<body>
-  <div class="bg">
-    <div class="grad grad-a"></div>
-    <div class="grad grad-b"></div>
-  </div>
-
-  <header class="shell">
-    <nav class="topbar">
-      <div class="brand">
-        <span class="logo">♪</span>
-        <span>Tiny Synth</span>
-      </div>
-      <div class="actions">
-        <button id="themeBtn" class="chip" aria-label="Toggle theme">🌗</button>
-        <a class="chip" href="#" onclick="location.reload()">Reset</a>
-      </div>
-    </nav>
-
-    <div class="hero">
-      <h1>Make a beat.</h1>
-      <p>Toggle steps, press play, and tweak the vibe—no libraries, just Web Audio.</p>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tiny Synth Sequencer</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="script.js"></script>
+  </head>
+  <body>
+    <div class="bg">
+      <div class="grad grad-a"></div>
+      <div class="grad grad-b"></div>
     </div>
 
-    <section class="panel controls">
-      <div class="control">
-        <label for="bpm">BPM</label>
-        <input id="bpm" type="range" min="60" max="180" value="110" />
-        <output id="bpmVal">110</output>
+    <header class="shell">
+      <nav class="topbar">
+        <div class="brand">
+          <span class="logo">♪</span>
+          <span>Tiny Synth</span>
+        </div>
+        <div class="actions">
+          <button id="themeBtn" class="chip" aria-label="Toggle theme">
+            🌗
+          </button>
+          <a class="chip" href="#" onclick="location.reload()">Reset</a>
+        </div>
+      </nav>
+
+      <div class="hero">
+        <h1>Make a beat.</h1>
+        <p>
+          Toggle steps, press play, and tweak the vibe—no libraries, just Web
+          Audio.
+        </p>
       </div>
 
-      <div class="control">
-        <label for="wave">Waveform</label>
-        <select id="wave">
-          <option value="sine">Sine</option>
-          <option value="triangle" selected>Triangle</option>
-          <option value="square">Square</option>
-          <option value="sawtooth">Sawtooth</option>
-        </select>
-      </div>
+      <section class="panel controls">
+        <div class="control">
+          <label for="bpm">BPM</label>
+          <input id="bpm" type="range" min="60" max="180" value="110" />
+          <output id="bpmVal">110</output>
+        </div>
 
-      <div class="control">
-        <label for="swing">Swing</label>
-        <input id="swing" type="range" min="0" max="100" value="0" />
-        <output id="swingVal">0%</output>
-      </div>
+        <div class="control">
+          <label for="wave">Waveform</label>
+          <select id="wave">
+            <option value="sine">Sine</option>
+            <option value="triangle" selected>Triangle</option>
+            <option value="square">Square</option>
+            <option value="sawtooth">Sawtooth</option>
+          </select>
+        </div>
 
-      <div class="buttons">
-        <button id="playBtn" class="btn primary">
-          <span class="dot dot-play"></span> Play
-        </button>
-        <button id="stopBtn" class="btn">■ Stop</button>
-        <button id="clearBtn" class="btn ghost">✖ Clear</button>
-        <button id="randomBtn" class="btn ghost">✨ Randomize</button>
-      </div>
-    </section>
-  </header>
+        <div class="control">
+          <label for="swing">Swing</label>
+          <input id="swing" type="range" min="0" max="100" value="0" />
+          <output id="swingVal">0%</output>
+        </div>
 
-  <main class="shell">
-    <section class="panel gridWrap">
-      <aside class="tracksMeta">
-        <div class="trackLabel">Kick <span class="note">C3</span></div>
-        <div class="trackLabel">Snare <span class="note">E3</span></div>
-        <div class="trackLabel">Hat <span class="note">G3</span></div>
-        <div class="trackLabel">Lead <span class="note">C4</span></div>
-      </aside>
+        <div class="buttons">
+          <button id="playBtn" class="btn primary">
+            <span class="dot dot-play"></span> Play
+          </button>
+          <button id="stopBtn" class="btn">■ Stop</button>
+          <button id="clearBtn" class="btn ghost">✖ Clear</button>
+          <button id="randomBtn" class="btn ghost">✨ Randomize</button>
+        </div>
+      </section>
+    </header>
 
-      <div id="grid" class="grid" aria-label="Step grid" role="grid"></div>
-    </section>
+    <main class="shell">
+      <section class="panel gridWrap">
+        <aside class="tracksMeta">
+          <div class="trackLabel">Kick <span class="note">C3</span></div>
+          <div class="trackLabel">Snare <span class="note">E3</span></div>
+          <div class="trackLabel">Hat <span class="note">G3</span></div>
+          <div class="trackLabel">Lead <span class="note">C4</span></div>
+        </aside>
 
-    <section class="panel tips">
-      <ul>
-        <li>Drag to paint notes • <kbd>Space</kbd> play/pause • <kbd>C</kbd> clear • <kbd>R</kbd> randomize</li>
-        <li>Change BPM, Swing, and Waveform while playing for smooth transitions.</li>
-      </ul>
-    </section>
-  </main>
+        <div id="grid" class="grid" aria-label="Step grid" role="grid"></div>
+      </section>
 
-  <footer class="shell foot">
-    <span>Built with vanilla JS • Have fun! 🎉</span>
-  </footer>
-</body>
+      <section class="panel tips">
+        <ul>
+          <li>
+            Drag to paint notes • <kbd>Space</kbd> play/pause •
+            <kbd>C</kbd> clear • <kbd>R</kbd> randomize
+          </li>
+          <li>
+            Change BPM, Swing, and Waveform while playing for smooth
+            transitions.
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="shell foot">
+      <span>Built with vanilla JS • Have fun! 🎉</span>
+    </footer>
+  </body>
 </html>
