@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tiny Synth Sequencer</title>
+  <link rel="preconnect" href="." />
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <header class="container">
+    <h1>🎵 Tiny Synth Sequencer</h1>
+    <p class="sub">Toggle steps, press play, and make a groove.</p>
+  </header>
+
+  <main class="container">
+    <section class="controls">
+      <div class="control">
+        <label for="bpm">BPM</label>
+        <input id="bpm" type="range" min="60" max="180" value="110" />
+        <span id="bpmVal">110</span>
+      </div>
+
+      <div class="control">
+        <label for="wave">Waveform</label>
+        <select id="wave">
+          <option value="sine">Sine</option>
+          <option value="triangle" selected>Triangle</option>
+          <option value="square">Square</option>
+          <option value="sawtooth">Sawtooth</option>
+        </select>
+      </div>
+
+      <div class="control">
+        <label for="swing">Swing</label>
+        <input id="swing" type="range" min="0" max="100" value="0" />
+        <span id="swingVal">0%</span>
+      </div>
+
+      <div class="buttons">
+        <button id="playBtn" class="primary">▶ Play</button>
+        <button id="stopBtn">■ Stop</button>
+        <button id="clearBtn" class="ghost">✖ Clear</button>
+        <button id="randomBtn" class="ghost">✨ Randomize</button>
+      </div>
+    </section>
+
+    <section class="gridWrap">
+      <div class="tracksMeta">
+        <div class="trackLabel">Kick <span class="note">C3</span></div>
+        <div class="trackLabel">Snare <span class="note">E3</span></div>
+        <div class="trackLabel">Hat <span class="note">G3</span></div>
+        <div class="trackLabel">Lead <span class="note">C4</span></div>
+      </div>
+
+      <div id="grid" class="grid" aria-label="Step grid" role="grid"></div>
+    </section>
+
+    <section class="tips">
+      <details>
+        <summary>Tips & Shortcuts</summary>
+        <ul>
+          <li>Click pads to toggle notes; drag across pads to paint.</li>
+          <li><kbd>Space</kbd> toggles play/stop, <kbd>C</kbd> clears, <kbd>R</kbd> randomizes.</li>
+          <li>Change waveform & BPM while playing—it's smooth.</li>
+        </ul>
+      </details>
+    </section>
+  </main>
+
+  <footer class="container foot">
+    <span>Made with vanilla JS • Have fun! 🎉</span>
+  </footer>
+
+  <!-- Subtle animated background -->
+  <div class="bg">
+    <div class="orb"></div>
+    <div class="orb orb2"></div>
+  </div>
+</body>
+</html>
